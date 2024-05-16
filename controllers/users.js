@@ -32,4 +32,31 @@ const register = async (req, res) => {
     })
 };
 
-module.exports = { register };
+const login = async (req, res) => {
+    const { username, password } = req.body;
+    const users = await User.findAll({ where: { username } });
+
+    if (users.length > 0) {
+        const user = users[0];
+
+        bcrypt.compare(password, user.password, (err, result) => {
+            if (result) {
+                req.session.user = {
+                    username: user.username,
+                    user_id: user.id
+                };
+                res.json({
+                    message: 'User is logged in',
+                    user,
+                    user_session: req.session.user
+                });
+            } else {
+                res.json({ message: 'Password is incorrect' });
+            }
+        });
+    } else {
+        res.json({ message: 'Username does not exist!' });
+    }
+};
+
+module.exports = { register, login };
